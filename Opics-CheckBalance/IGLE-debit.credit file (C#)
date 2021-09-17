@@ -1,0 +1,122 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.IO;
+
+namespace WindowsFormsApp_newOPICS
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+            Timer timer1 = new Timer();
+            timer1.Interval = 200;
+            timer1.Tick += new EventHandler(timer1_Tick);
+            timer1.Start();
+        }
+        void timer1_Tick(object sender, EventArgs e)
+        {
+            if (label5.ForeColor != Color.LavenderBlush) label5.ForeColor = Color.LavenderBlush;
+            else label5.ForeColor = Color.Green;
+        }
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            string target = Directory.GetCurrentDirectory();
+           
+            DirectoryInfo d = new DirectoryInfo(@target);          
+            string all = "IGLE5.B01";
+            int index_CR;
+            int index_DR;
+            decimal sum_CR = 0 ;
+            decimal sum_DR = 0 ;
+            decimal cr_dr ;
+            string line;
+            var lineCount = 0;
+            //checking existing IGLE file ----------------------------------------------
+            if (!File.Exists(target + "\\" + all))
+            {
+                label8.Text = "File does not exist.";
+                label5.Text = " ";
+                return;
+            }
+            //-----------------------------------------------------------------------------
+            else 
+            //To count file lines .-----------------------------------------------------
+            using (var reader = File.OpenText(target + "\\" + all))
+            {
+                while (reader.ReadLine() != null)
+                {
+                    lineCount++;
+                }
+            }
+            label7.Text = lineCount.ToString();
+
+            string line2 = File.ReadLines(target + "\\" + all).Take(1).Last();
+            if (line2.LastIndexOf("DR") != -1)
+            label12.Text = line2.Substring(line2.LastIndexOf("DR") - 23, 8);
+            else label12.Text = line2.Substring(line2.LastIndexOf("CR") - 23, 8);  
+            //---------------------------------------------------------------------------
+            for (int i = 0; i < lineCount; i++)
+            {
+                     line = File.ReadLines(target + "\\" + all).Skip(i).Take(1).First();
+                  
+
+                  
+                     if (line.IndexOf("\"CR\"") != -1)
+                    {
+                        index_CR = line.IndexOf("\"CR\"");
+                        int index_end_num = line.IndexOf(',', index_CR + 5);
+                        int the_num_length = index_end_num - index_CR - 5;
+                        string only_number = line.Substring(index_CR + 5, the_num_length);
+                        cr_dr = System.Convert.ToDecimal(only_number);
+                        sum_CR = sum_CR + cr_dr;
+
+                    }
+                     else if (line.LastIndexOf("DR") != -1)
+                    {
+                       
+                        string DRword = "DR";
+                        index_DR = line.LastIndexOf(DRword);
+                        
+                        int index_end_num = line.IndexOf(',', index_DR + 5);
+                        int the_num_length = index_end_num - index_DR - 4;
+                        string only_number = line.Substring(index_DR + 4, the_num_length);
+                        cr_dr = System.Convert.ToDecimal(only_number);
+                        sum_DR = sum_DR + cr_dr;
+                    }
+                    else
+                    {
+                        label5.Text = i.ToString();
+                        continue;
+                    }
+                    label3.Text = sum_DR.ToString();
+                    label4.Text = sum_CR.ToString();
+            }
+          
+            if (sum_CR == sum_DR)
+          
+            {
+                label5.Text = "Balanced";
+                label8.Text = " ";
+            
+            }
+
+            else
+
+                label8.Text = "Not Balanced by: " + (sum_DR - sum_CR);
+            
+        }
+    }
+        }
